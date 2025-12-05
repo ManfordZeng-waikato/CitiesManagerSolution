@@ -1,8 +1,15 @@
+using CitiesManager.WebAPI.DatabaseContext;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+builder.Services.AddDbContext<ApplicationDbContext>(optionsAction =>
+{
+    optionsAction.UseSqlServer(builder.Configuration.GetConnectionString("CitiesManagerConnectionString"));
+});
 
 var app = builder.Build();
 
