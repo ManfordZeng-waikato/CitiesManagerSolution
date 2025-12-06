@@ -15,6 +15,10 @@ namespace CitiesManager.WebAPI.Controllers
         }
 
         // GET: api/Cities
+        /// <summary>
+        /// To get list of cities(including city ID and city name) from the database.
+        /// </summary>
+        /// <returns>List of cities, ordered by city name</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<City>>> GetCities()
         {

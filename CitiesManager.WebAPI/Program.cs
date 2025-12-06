@@ -12,7 +12,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(optionsAction =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
+});
 
 var app = builder.Build();
 
