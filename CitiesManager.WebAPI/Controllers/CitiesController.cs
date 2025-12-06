@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CitiesManager.WebAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CitiesController : ControllerBase
+    public class CitiesController : CustomControllerBase
     {
         private readonly ApplicationDbContext _context;
 
