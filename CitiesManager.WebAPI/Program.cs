@@ -1,11 +1,20 @@
 using CitiesManager.WebAPI.DatabaseContext;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    //Responses type settings
+    options.Filters.Add(new ProducesAttribute("application/json"));
+
+    //Requests type settings
+    options.Filters.Add(new ConsumesAttribute("application/json"));
+});
+
 builder.Services.AddDbContext<ApplicationDbContext>(optionsAction =>
 {
     optionsAction.UseSqlServer(builder.Configuration.GetConnectionString("CitiesManagerConnectionString"));
