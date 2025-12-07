@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using CitiesManager.WebAPI.DatabaseContext;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,9 +17,12 @@ builder.Services.AddControllers(options =>
     options.Filters.Add(new ConsumesAttribute("application/json"));
 });
 
-builder.Services.AddApiVersioning(options =>
+//API Versioning
+builder.Services
+.AddApiVersioning(options =>
 {
-    options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+    //options.ApiVersionReader = new QueryStringApiVersionReader("api-version");
+    options.DefaultApiVersion = new ApiVersion(1, 0);
     options.AssumeDefaultVersionWhenUnspecified = true;
     options.ReportApiVersions = true;
 })
@@ -28,43 +32,46 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
-builder.Services.AddDbContext<ApplicationDbContext>(optionsAction =>
-{
-    optionsAction.UseSqlServer(builder.Configuration.GetConnectionString("CitiesManagerConnectionString"));
-});
 
+//Swagger Configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "CitiesManager.WebAPI",
-        Version = "v1"
+        Version = "1.0"
     });
 
     options.SwaggerDoc("v2", new OpenApiInfo
     {
         Title = "CitiesManager.WebAPI",
-        Version = "v2"
+        Version = "2.0"
     });
 
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
 });
 
+//Database Context
+builder.Services.AddDbContext<ApplicationDbContext>(optionsAction =>
+{
+    optionsAction.UseSqlServer(builder.Configuration.GetConnectionString("CitiesManagerConnectionString"));
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-
 app.UseHsts();
 app.UseHttpsRedirection();
 
 if (app.Environment.IsDevelopment())
 {
+    //Create endpoint for swagger.jaon
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "CitiesManager.WebAPI v1");
-        options.SwaggerEndpoint("/swagger/v2/swagger.json", "CitiesManager.WebAPI v2");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "1.0");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "2.0");
     });
 }
 
