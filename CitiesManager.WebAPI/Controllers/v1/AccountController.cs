@@ -21,7 +21,7 @@ namespace CitiesManager.WebAPI.Controllers.v1
             _roleManager = roleManager;
         }
 
-        [HttpPost]
+        [HttpPost("register")]
         public async Task<ActionResult<ApplicationUser>> PostRegister(RegisterDTO registerDTO)
         {
             if (ModelState.IsValid == false)
@@ -59,7 +59,7 @@ namespace CitiesManager.WebAPI.Controllers.v1
             }
         }
 
-        [HttpGet]
+        [HttpGet("IsEmailAlreadyRegister")]
         public async Task<IActionResult> IsEmailAlreadyRegister(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -71,6 +71,34 @@ namespace CitiesManager.WebAPI.Controllers.v1
             {
                 return Ok(false);
             }
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult> PostLogin(LoginDTO loginDTO)
+        {
+            if (ModelState.IsValid == false)
+            {
+                string errorMessages =
+                string.Join("|", ModelState.Values.SelectMany(e => e.Errors).Select(e => e.ErrorMessage));
+                return Problem(errorMessages);
+            }
+            var result = await _signInManager.PasswordSignInAsync(loginDTO.Email, loginDTO.Password, isPersistent: false, lockoutOnFailure: false);
+            if (result.Succeeded)
+            {
+                var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+                return Ok(new { personName = user.PersonName, email = user.Email });
+            }
+            else
+            {
+                return Problem("Invalid login attempt");
+            }
+        }
+
+        [HttpGet("logout")]
+        public async Task<ActionResult> GetLogout()
+        {
+            await _signInManager.SignOutAsync();
+            return NoContent();
         }
     }
 }
