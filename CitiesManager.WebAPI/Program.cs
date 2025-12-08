@@ -90,6 +90,8 @@ var app = builder.Build();
 app.UseHsts();
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
+
 if (app.Environment.IsDevelopment())
 {
     //Create endpoint for swagger.jaon
