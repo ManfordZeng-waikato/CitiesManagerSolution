@@ -1,5 +1,5 @@
 using Asp.Versioning;
-using CitiesManager.WebAPI.DatabaseContext;
+using CitiesManager.Infrastructure.DatabaseContext;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -7,6 +7,16 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // Angular dev server 
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddControllers(options =>
 {
@@ -74,7 +84,8 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v2/swagger.json", "2.0");
     });
 }
-
+app.UseRouting();
+app.UseCors();
 app.UseAuthorization();
 
 app.MapControllers();

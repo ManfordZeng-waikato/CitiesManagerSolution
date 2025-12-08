@@ -1,14 +1,17 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { City } from '../models/city';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CitiesService {
-  cities : City[] = [];
-  constructor() {
-    this.cities = [new City("101", 'New York'), new City("102", 'Los Angeles'), new City("103", 'Chicago')];
-  }
+  private http = inject(HttpClient);
 
-  public getCities(): City[] { return this.cities; }
+  private baseUrl = 'https://localhost:7188/api/v1/cities';
+
+  getCities(): Observable<City[]> {
+    return this.http.get<City[]>(this.baseUrl);
+  }
 }

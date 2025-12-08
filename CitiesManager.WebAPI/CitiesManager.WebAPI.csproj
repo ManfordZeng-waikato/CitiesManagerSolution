@@ -21,4 +21,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CitiesManager.Core\CitiesManager.Core.csproj" />
+    <ProjectReference Include="..\CitiesManager.Infrastructure\CitiesManager.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
