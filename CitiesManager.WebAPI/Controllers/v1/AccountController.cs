@@ -76,6 +76,11 @@ namespace CitiesManager.WebAPI.Controllers.v1
                 }
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 AuthenticationResponse authenticationResponse = _jwtService.CreateJwtToken(user);
+
+                user.RefreshToken = authenticationResponse.RefreshToken;
+                user.RefreshTokenExpirationDateTime = authenticationResponse.RefreshTokenExpiration;
+                await _userManager.UpdateAsync(user);
+
                 return Ok(authenticationResponse);
             }
             else
@@ -114,6 +119,10 @@ namespace CitiesManager.WebAPI.Controllers.v1
                 var user = await _userManager.FindByEmailAsync(loginDTO.Email);
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 AuthenticationResponse authenticationResponse = _jwtService.CreateJwtToken(user);
+
+                user.RefreshToken = authenticationResponse.RefreshToken;
+                user.RefreshTokenExpirationDateTime = authenticationResponse.RefreshTokenExpiration;
+                await _userManager.UpdateAsync(user);
                 return Ok(authenticationResponse);
             }
             else
