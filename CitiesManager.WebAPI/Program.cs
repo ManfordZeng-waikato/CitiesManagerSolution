@@ -1,15 +1,20 @@
 using Asp.Versioning;
 using CitiesManager.Core.Identity;
+using CitiesManager.Core.ServiceContracts;
+using CitiesManager.Core.Services;
 using CitiesManager.Infrastructure.DatabaseContext;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddTransient<IJwtService, JwtService>();
 
 builder.Services.AddCors(options =>
 {
@@ -28,7 +33,12 @@ builder.Services.AddControllers(options =>
 
     //Requests type settings
     options.Filters.Add(new ConsumesAttribute("application/json"));
+})
+    .AddJsonOptions(opt =>
+{
+    opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
+
 
 //API Versioning
 builder.Services

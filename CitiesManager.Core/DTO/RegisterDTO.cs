@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CitiesManager.Core.Enums;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace CitiesManager.Core.DTO
@@ -23,5 +24,6 @@ namespace CitiesManager.Core.DTO
         [Required(ErrorMessage = "Confirm password cant be blank")]
         [Compare("Password", ErrorMessage = "Password and confirm password do not match")]
         public string? ConfirmPassword { get; set; } = string.Empty;
+        public UserTypeOptions UserType { get; set; } = UserTypeOptions.User;
     }
 }

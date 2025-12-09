@@ -1,6 +1,8 @@
 ﻿using Asp.Versioning;
 using CitiesManager.Core.DTO;
+using CitiesManager.Core.Enums;
 using CitiesManager.Core.Identity;
+using CitiesManager.Core.ServiceContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +16,13 @@ namespace CitiesManager.WebAPI.Controllers.v1
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<ApplicationRole> roleManager)
+        private readonly IJwtService _jwtService;
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<ApplicationRole> roleManager, IJwtService jwtService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+            _jwtService = jwtService;
         }
 
         [HttpPost("register")]
@@ -36,7 +40,7 @@ namespace CitiesManager.WebAPI.Controllers.v1
                 PersonName = registerDTO.PersonName,
                 UserName = registerDTO.Email,
                 Email = registerDTO.Email,
-                PhoneNumber = registerDTO.PhoneNumber
+                PhoneNumber = registerDTO.PhoneNumber,
             };
             IdentityResult result =
             await _userManager.CreateAsync(user, registerDTO.Password);
@@ -44,17 +48,39 @@ namespace CitiesManager.WebAPI.Controllers.v1
             if (result.Succeeded)
             {
                 // Assign Role
-                if (await _roleManager.RoleExistsAsync("User"))
+                if (registerDTO.UserType == UserTypeOptions.Admin)
                 {
-                    await _userManager.AddToRoleAsync(user, "User");
+                    if (await _roleManager.FindByNameAsync(UserTypeOptions.Admin.ToString()) is null)
+                    {
+                        ApplicationRole applicationRole = new()
+                        {
+                            Name = UserTypeOptions.Admin.ToString()
+                        };
+                        await _roleManager.CreateAsync(applicationRole);
+
+                        await _userManager.AddToRoleAsync(user, UserTypeOptions.Admin.ToString());
+                    }
+                }
+                else
+                {
+                    if (await _roleManager.FindByNameAsync(UserTypeOptions.User.ToString()) is null)
+                    {
+                        ApplicationRole applicationRole = new()
+                        {
+                            Name = UserTypeOptions.User.ToString()
+                        };
+                        await _roleManager.CreateAsync(applicationRole);
+
+                        await _userManager.AddToRoleAsync(user, UserTypeOptions.User.ToString());
+                    }
                 }
                 await _signInManager.SignInAsync(user, isPersistent: false);
-                return Ok(user);
+                AuthenticationResponse authenticationResponse = _jwtService.CreateJwtToken(user);
+                return Ok(authenticationResponse);
             }
             else
             {
-                string errorMessages =
-                string.Join("|", result.Errors.Select(e => e.Description));
+                string errorMessages = string.Join("|", result.Errors.Select(e => e.Description));
                 return Problem(errorMessages);
             }
         }
@@ -86,7 +112,9 @@ namespace CitiesManager.WebAPI.Controllers.v1
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(loginDTO.Email);
-                return Ok(new { personName = user.PersonName, email = user.Email });
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                AuthenticationResponse authenticationResponse = _jwtService.CreateJwtToken(user);
+                return Ok(authenticationResponse);
             }
             else
             {
