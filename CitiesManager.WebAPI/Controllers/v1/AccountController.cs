@@ -6,6 +6,7 @@ using CitiesManager.Core.ServiceContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CitiesManager.WebAPI.Controllers.v1
 {
@@ -136,6 +137,32 @@ namespace CitiesManager.WebAPI.Controllers.v1
         {
             await _signInManager.SignOutAsync();
             return NoContent();
+        }
+
+        [HttpPost("generate-new-jwt-token")]
+        public async Task<ActionResult> PostGenerateNewJwtToken(TokenModel tokenModel)
+        {
+            if (tokenModel == null)
+            {
+                return Problem("Invalid client request");
+            }
+            ClaimsPrincipal? principal = _jwtService.GetPrincinpalFromJwtToken(tokenModel.Token);
+            if (principal == null)
+            {
+                return Problem("Invalid JWT token");
+            }
+
+            string? email = principal.FindFirstValue(ClaimTypes.Email);
+            ApplicationUser? applicationUser = await _userManager.FindByEmailAsync(email);
+            if (applicationUser == null || applicationUser.RefreshToken != tokenModel.RefreshToken || applicationUser.RefreshTokenExpirationDateTime <= DateTime.Now)
+            {
+                return Problem("Invalid refresh token");
+            }
+            var authenticationResponse = _jwtService.CreateJwtToken(applicationUser);
+            applicationUser.RefreshToken = authenticationResponse.RefreshToken;
+            applicationUser.RefreshTokenExpirationDateTime = authenticationResponse.RefreshTokenExpiration;
+            await _userManager.UpdateAsync(applicationUser);
+            return Ok(authenticationResponse);
         }
     }
 }

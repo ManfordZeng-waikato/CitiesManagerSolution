@@ -28,7 +28,9 @@ namespace CitiesManager.Core.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat,DateTime.UtcNow.ToString()),
-                new Claim(ClaimTypes.Name,user.PersonName)
+                new Claim(ClaimTypes.Name,user.PersonName),
+                new Claim(ClaimTypes.NameIdentifier,user.Email),
+                new Claim(ClaimTypes.Email,user.Email)
             };
 
             SymmetricSecurityKey securitykey = new(
@@ -63,6 +65,32 @@ namespace CitiesManager.Core.Services
             RandomNumberGenerator rng = RandomNumberGenerator.Create();
             rng.GetBytes(randomNumber);
             return Convert.ToBase64String(randomNumber);
+        }
+
+        public ClaimsPrincipal? GetPrincinpalFromJwtToken(string? token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = false,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _configuration["Jwt:ISSUER"],
+                ValidAudience = _configuration["Jwt:AUDIENCE"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:KEY"])),
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            ClaimsPrincipal principal =
+                tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Invalid token");
+            }
+
+            return principal;
         }
     }
 }
